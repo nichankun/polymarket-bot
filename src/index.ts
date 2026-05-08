@@ -1,4 +1,18 @@
+// SESUDAH — tambahkan polyfill atob untuk Node.js
 import "dotenv/config";
+
+// Node.js atob tidak support semua Base64 variant yang dipakai Polymarket SDK
+// Polyfill dengan implementasi yang lebih toleran
+if (
+  typeof globalThis.atob === "undefined" ||
+  globalThis.atob.toString().includes("native code")
+) {
+  globalThis.atob = (str: string) =>
+    Buffer.from(str, "base64").toString("binary");
+  globalThis.btoa = (str: string) =>
+    Buffer.from(str, "binary").toString("base64");
+}
+
 import { PolymarketBot } from "./bot";
 import { logger } from "./logger";
 
@@ -25,7 +39,10 @@ async function main() {
   });
 
   process.on("uncaughtException", (err) => {
-    logger.error("Uncaught exception", { error: err.message, stack: err.stack });
+    logger.error("Uncaught exception", {
+      error: err.message,
+      stack: err.stack,
+    });
     // Don't crash — let the bot keep running unless critical
   });
 

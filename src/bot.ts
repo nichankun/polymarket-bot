@@ -47,10 +47,8 @@ export class PolymarketBot {
     logger.info(`Order size: $${config.defaultOrderSize}`);
     logger.info(`Chain: Polygon (137)`);
 
-    // Initialize trading client (L1 + L2 auth)
     await this.tradingService.initialize();
-
-    // Show initial balances
+    await this.tradingService.updateAllowance(); // set allowance dulu
     await this.logBalances();
 
     this.running = true;
@@ -147,11 +145,13 @@ export class PolymarketBot {
     try {
       const trade = await this.tradingService.executeOpportunity(opp);
 
-      if (trade.status.startsWith("error")) {
+      if (
+        trade.status.startsWith("error") ||
+        trade.status.startsWith("rejected")
+      ) {
         this.stats.totalOrdersFailed++;
       } else {
         this.stats.totalOrdersPlaced++;
-        // Masukkan market ke cooldown agar tidak dieksekusi lagi segera
         this.strategyEngine.markExecuted(opp.market.conditionId);
       }
     } catch (err) {

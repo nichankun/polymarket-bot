@@ -118,7 +118,9 @@ export class MarketService {
   private parseMarket(market: GammaMarket): ParsedMarket | null {
     try {
       const tokenIds: string[] = market.clobTokenIds
-        ? JSON.parse(market.clobTokenIds)
+        ? (JSON.parse(market.clobTokenIds) as string[]).map((id: string) =>
+            id.trim(),
+          )
         : [];
 
       if (tokenIds.length === 0) return null;
